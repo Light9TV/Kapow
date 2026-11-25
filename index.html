@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Terry / Kazuya / Ryu / Ken counterpicks</title>
+<style>
+:root{--bg:#fff;--fg:#1b1b1b;--mut:#666;--line:#e6e6e6;
+--t:#a8461a;--tb:#fbe9df;--z:#7a2e8c;--zb:#f3e4f6;--r:#1d5fa8;--rb:#e1ecf8;--k:#b3123d;--kb:#fbe3e9;--sb:#efefef}
+@media (prefers-color-scheme:dark){:root{--bg:#121212;--fg:#ececec;--mut:#9b9b9b;--line:#2b2b2b;
+--t:#f2a273;--tb:#3b2317;--z:#e0a3ee;--zb:#3a1f40;--r:#8fbaf0;--rb:#17283d;--k:#f38aa6;--kb:#3d1621;--sb:#262626}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,sans-serif}
+main{max-width:560px;margin:0 auto;padding:20px 16px 40px}
+h1{font-size:20px;font-weight:600;margin:0 0 4px}
+.sub{color:var(--mut);font-size:13px;margin:0 0 14px}
+.modes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 6px}
+.mb{font:inherit;font-size:13px;padding:8px 2px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--mut);cursor:pointer}
+.mb.on{font-weight:600}
+.mb.on.t{background:var(--tb);color:var(--t);border-color:var(--t)}
+.mb.on.z{background:var(--zb);color:var(--z);border-color:var(--z)}
+.mb.on.r{background:var(--rb);color:var(--r);border-color:var(--r)}
+.mb.on.k{background:var(--kb);color:var(--k);border-color:var(--k)}
+.hint{font-size:12px;color:var(--mut);margin:0 0 12px}
+input{width:100%;font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 4px}
+.chip{font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:none;color:var(--fg);cursor:pointer}
+.chip.on{background:var(--sb);border-color:var(--mut)}
+.row{padding:10px 0;border-bottom:1px solid var(--line)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.n{font-weight:600}
+.b{font-size:12px;padding:2px 8px;border-radius:6px;white-space:nowrap;font-weight:600}
+.bx{background:var(--sb);color:var(--fg)}
+.bt{background:var(--tb);color:var(--t)}.bz{background:var(--zb);color:var(--z)}.br{background:var(--rb);color:var(--r)}.bk{background:var(--kb);color:var(--k)}
+.ct{color:var(--t);font-weight:600}.cz{color:var(--z);font-weight:600}.cr{color:var(--r);font-weight:600}.ck{color:var(--k);font-weight:600}
+.r{font-size:13px;color:var(--mut);margin:4px 0 0}
+.rt{font-size:12px;color:var(--mut);margin:4px 0 0}
+.rt b{font-weight:600;color:var(--fg)}
+.foot{font-size:12px;color:var(--mut);margin-top:20px}
+</style>
+</head>
+<body>
+<main>
+<h1>Counterpicks</h1>
+<p class="sub">All four Elite (~15.5M GSP). Terry wins ties. If Kazuya, Ryu or Ken tie for best, all of them are shown. Dittos go last.</p>
+<div class="modes" id="modes"></div>
+<p class="hint">Tap a character to add or remove them from your pool.</p>
+<input id="q" placeholder="Search a fighter" aria-label="Search a fighter">
+<div class="chips" id="chips"></div>
+<div id="list"></div>
+<p class="foot">Terry and Ryu numbers come from Game8's Terry and Ryu matchup charts (-1 / even / +1). Numbers with ~ are estimates: Game8 has no readable chart for Ken or Kazuya, so those are based on how each character plays (Kazuya: crouch dash under projectiles, Gates of Hell and Devil Blaster on weak recoveries, slow jumpsquat vs fast air characters; Ken: rushdown, weaker vs zoners and disjoints). Picks are opinions; adjust to your own results.</p>
+</main>
+<script>
+// v = [Terry, Ryu, Ken, Kazuya] ratings. Notes: t Terry, r Ryu, k Ken, z Kazuya.
+// e = which ratings are estimates (default "kz"). d = ditto character. s = situational switch.
+const X=[
+{n:"Mario",v:[0,0,0,0],t:"Your weight outlasts his combos; ledge-trap his recovery.",r:"Hadoken makes him approach into your tilts.",k:"Trade combos up close; you outweigh him.",z:"His fast combos punish your slow jumpsquat; win off big punishes."},
+{n:"Donkey Kong",v:[0,1,1,1],t:"Big body eats your combos; respect cargo throw near ledge.",r:"Huge target for Hadoken and tilt confirms.",k:"Big body takes every Ken string.",z:"Combo food, and Gates of Hell sends his weak recovery deep."},
+{n:"Link",v:[0,-1,-1,0],t:"Shield through arrows and punish laggy sword swings.",r:"His sword and projectiles out-range Ryu.",k:"Ken has to approach through bombs, arrows and a disjointed sword.",z:"Crouch dash can duck arrows and boomerang; bombs are the real problem.",s:[{c:"z",i:"bombs and arrows keep you out"}]},
+{n:"Samus / Dark Samus",v:[-1,-1,-1,0],t:"Charge shot and missiles wall you out.",r:"Her projectiles out-zone your Hadoken.",k:"Ken has to approach through all of it.",z:"Crouch dash can slip under charge shot and missiles to get in."},
+{n:"Yoshi",v:[0,0,0,-1],t:"Anti-air his aerials; don't chase his double jump offstage.",r:"Shoryuken anti-airs his aerials; don't chase his double jump.",k:"Shoryuken anti-airs him; his armored jump can beat your strings.",z:"His air game and eggs work over your slow jump."},
+{n:"Kirby",v:[0,1,1,1],t:"Light, so Rising Tackle kills him early.",r:"Hadoken and tilts out-range him, and he's light.",k:"Slow and light; combos into Shoryuken kill early.",z:"Slow and light; one punish takes the stock."},
+{n:"Fox",v:[0,0,0,-1],t:"Auto-turn and out-of-shield Rising Tackle punish his rushdown.",r:"Shoryuken out of shield punishes his rushdown; he's light.",k:"Light; any Shoryuken confirm kills.",z:"His speed and cross-ups wreck your inputs."},
+{n:"Pikachu",v:[-1,-1,-1,-2],t:"He gimps your recovery; ledge-trap him back.",r:"Small and fast; Hadoken does little to him.",k:"His small hurtbox drops your strings.",z:"Small, fast cross-ups, and he gimps you. Avoid."},
+{n:"Luigi",v:[0,0,0,0],t:"Stay out of grab range and punish whiffed grabs.",r:"Hadoken keeps him from walking in for grabs.",k:"Stay out of grab range; punish whiffs with strings.",z:"His grab combos hurt, but his recovery is easy to edgeguard."},
+{n:"Ness",v:[0,0,0,0],t:"Your weight resists back throw; edgeguard PK Thunder.",r:"Edgeguard PK Thunder; back throw kills you late.",k:"Tatsu's invincible leg beats PK Fire.",z:"Devil Blaster can punish his PK Thunder recovery."},
+{n:"Captain Falcon",v:[0,0,0,0],t:"Out-of-shield Rising Tackle punishes his approaches.",r:"Shoryuken out of shield punishes his approaches.",k:"Combo trades up close; you out-damage him.",z:"He's fast, but combo food once you land a hit."},
+{n:"Jigglypuff",v:[0,0,0,-1],t:"Don't chase her in the air; she's light, so kill early.",r:"She's light; one Shoryuken kills.",k:"She's light; any Shoryuken confirm kills.",z:"She floats around your slow jump."},
+{n:"Peach / Daisy",v:[0,0,0,-1],t:"Anti-air float aerials; watch turnips offstage.",r:"Shoryuken anti-airs her float aerials.",k:"Her float aerials beat Ken's short range; anti-air with Shoryuken.",z:"Float aerials pick apart your weak disadvantage."},
+{n:"Bowser",v:[0,-1,0,1],t:"Big target for nair combos; respect Flying Slam.",r:"His armor and range beat Ryu's short pokes.",k:"Faster than Ryu, so Ken whiff-punishes his laggy swings.",z:"Huge body for your combos, and he struggles to escape them."},
+{n:"Ice Climbers",v:[0,0,0,0],t:"Invincible out-of-shield options beat their grab hunting.",r:"Shoryuken out of shield beats their grab hunting.",k:"Ken's up throw misses Nana more often than Ryu's.",z:"Slow startup makes you grab bait; separate Nana first."},
+{n:"Sheik",v:[0,0,0,-1],t:"She struggles to close stocks on heavy Terry.",r:"She struggles to kill heavy Ryu.",k:"Ken's speed keeps up with her better than Ryu's.",z:"Fast cross-ups and needles beat your slow startup."},
+{n:"Zelda",v:[0,0,0,0],t:"Shield Phantom and punish; her landings are laggy.",r:"Punish laggy Phantom and Din's Fire.",k:"Ken's speed gets through Phantom and Din's Fire.",z:"Crouch dash past Phantom and punish hard."},
+{n:"Dr. Mario",v:[0,1,1,1],t:"He's slow; whiff-punish him.",r:"He's slow; Hadoken and tilts out-pace him.",k:"Ken's speed and strings bully him.",z:"Slow with a weak recovery; Gates of Hell takes stocks."},
+{n:"Pichu",v:[0,0,0,-1],t:"Ultra-light; one read kills.",r:"Ultra-light; one Shoryuken kills.",k:"Ultra-light; any Shoryuken confirm kills.",z:"Tiny and fast; some of your moves whiff on him."},
+{n:"Falco",v:[0,0,0,0],t:"Shield lasers and punish his landings.",r:"Shoryuken out of shield punishes his aerials.",k:"Up close, Ken out-damages him.",z:"Combo food once you land a hit."},
+{n:"Marth",v:[-1,0,-1,-1],t:"Tipper outranges you.",r:"Hadoken makes him approach into your tilts.",k:"Tipper outranges Ken's short normals.",z:"Tipper outranges your slow pokes."},
+{n:"Lucina",v:[-1,-1,-1,-1],t:"Shield her pressure and punish out of shield.",r:"Her sword outranges your normals.",k:"Her disjoint walls Ken's approach.",z:"Her speed and range beat your slow startup."},
+{n:"Young Link",v:[0,-1,-1,0],t:"Shield bombs and arrows, then push in.",r:"His projectiles out-zone Ryu.",k:"Ken has to approach through his projectiles.",z:"Crouch dash can duck arrows and boomerang.",s:[{c:"z",i:"the projectiles keep you out"}]},
+{n:"Ganondorf",v:[0,1,1,2],t:"Outpace him and punish whiffs.",r:"Slow and big; Hadoken forces him to approach.",k:"Ken's speed and strings bully him.",z:"Slow, huge and easy to edgeguard."},
+{n:"Mewtwo",v:[1,0,1,1],t:"Huge hurtbox eats your combos.",r:"Shadow Ball beats Hadoken at range; fight up close.",k:"Huge, light hurtbox for Ken's strings.",z:"Big hurtbox for your combos, and he's light for his size."},
+{n:"Roy",v:[0,-1,-1,0],t:"Out-of-shield Rising Tackle beats his shield pressure.",r:"His fast multi-hit fair beats Focus Attack.",k:"His fast fair beats Focus Attack.",z:"Spike his linear Blazer recovery."},
+{n:"Chrom",v:[0,0,0,1],t:"Spike his linear Soaring Slash.",r:"Edgeguard his linear Soaring Slash.",k:"Edgeguard his linear Soaring Slash.",z:"His linear recovery is free for Devil Blaster and nair spikes."},
+{n:"Mr. Game & Watch",v:[-1,-1,-1,-1],t:"He's light, so kill early with Rising Tackle.",r:"His aerials beat Ryu's approach.",k:"His aerials stuff Ken's rushdown.",z:"Small, fast aerials beat your slow jump."},
+{n:"Meta Knight",v:[0,0,0,-1],t:"Your air speed can't chase him; stay grounded.",r:"Stay grounded and anti-air him.",k:"Stay grounded; Shoryuken anti-airs.",z:"His multi-hit aerials punish your slow jump."},
+{n:"Pit / Dark Pit",v:[1,0,0,0],t:"Shield arrows and push in.",r:"Shield arrows and fight up close.",k:"Rush past arrows; you out-damage him.",z:"Crouch dash can duck arrows."},
+{n:"Zero Suit Samus",v:[0,-1,-1,-1],t:"She's light; punish whiffs and kill early.",r:"Her speed and range outpace Ryu.",k:"She out-moves Ken.",z:"Speed and flip-kick cross-ups beat your inputs."},
+{n:"Wario",v:[0,0,0,-1],t:"Anti-air his aerials; play around waft timing.",r:"Anti-air with Shoryuken; track waft.",k:"Anti-air with Shoryuken; track waft.",z:"His air game and bike beat your slow jump."},
+{n:"Snake",v:[-1,0,-1,0],t:"Explosives wall you out.",r:"Hadoken lets you play the range game.",k:"Ken has to approach through grenades.",z:"Heavy Snake is combo food, and armor helps you through grenades."},
+{n:"Ike",v:[0,0,0,0],t:"Punish laggy swings; edgeguard Aether.",r:"Punish laggy swings; edgeguard Aether.",k:"Ken's speed punishes laggy swings.",z:"Aether is easy to edgeguard."},
+{n:"Pokémon Trainer",v:[-1,0,0,0],t:"Three fighters to answer; Squirtle's speed is the problem.",r:"Hadoken checks all three.",k:"Charizard and Ivysaur are combo food.",z:"Charizard is combo food; Squirtle is the hard part."},
+{n:"Diddy Kong",v:[-1,0,0,-1],t:"Bananas and speed control neutral.",r:"Hadoken and tilts keep him from setting up bananas.",k:"Ken's speed keeps pressure on before bananas come out.",z:"Bananas trip up your slow ground game."},
+{n:"Lucas",v:[0,0,0,0],t:"Weight resists his throws; edgeguard PK Thunder.",r:"Edgeguard PK Thunder.",k:"Edgeguard PK Thunder.",z:"Devil Blaster punishes his PK Thunder recovery."},
+{n:"Sonic",v:[0,-1,-1,-2],t:"He struggles to kill heavy Terry; stay patient.",r:"His speed avoids Hadoken.",k:"He runs away from Ken's rushdown.",z:"Results-based charts rate this one of Kazuya's worst. Avoid."},
+{n:"King Dedede",v:[0,0,0,1],t:"Big body; close in past Gordos.",r:"Big target for Hadoken.",k:"Big body for strings once you get past Gordos.",z:"Big, slow body is combo food."},
+{n:"Olimar",v:[1,0,0,0],t:"Big swings clear pikmin.",r:"He's light; Shoryuken kills early.",k:"He's light; rush him down.",z:"He's light; one punish kills."},
+{n:"Lucario",v:[0,0,0,0],t:"Kill before aura scales.",r:"Kill before aura scales.",k:"Kill before aura scales.",z:"Kill before aura scales."},
+{n:"R.O.B.",v:[0,0,0,0],t:"Shield gyro pressure and punish.",r:"Big body for tilt confirms.",k:"Big body for strings; watch gyro.",z:"Big body for combos."},
+{n:"Toon Link",v:[0,0,-1,0],t:"Shield bombs and arrows, then push in.",r:"Hadoken contests his projectiles.",k:"Ken has to approach through bombs and arrows.",z:"Crouch dash can duck arrows and boomerang.",s:[{c:"z",i:"the projectiles keep you out"}]},
+{n:"Wolf",v:[0,0,0,-1],t:"Respect nair and bair; shield blaster.",r:"Shoryuken out of shield punishes his aerials.",k:"Out-damage him up close.",z:"Fast aerials punish your slow startup."},
+{n:"Villager",v:[0,-1,-1,0],t:"Shield past Lloid and slingshot.",r:"He can pocket your Hadoken.",k:"Ken approaches into Lloid and trees.",z:"Crouch dash past slingshot; pocket can steal Devil Blaster.",s:[{c:"z",i:"Lloid and slingshot keep you out"}]},
+{n:"Mega Man",v:[-1,-1,-1,0],t:"Pellets wall you out.",r:"Pellets out-zone Hadoken.",k:"Ken approaches into pellets.",z:"Crouch dash can duck pellets to get in."},
+{n:"Wii Fit Trainer",v:[-1,0,-1,0],t:"Ball and Sun Salutation wall you out.",r:"Hadoken contests her projectiles.",k:"Ken approaches into her projectiles.",z:"Crouch dash can duck her projectiles."},
+{n:"Rosalina & Luma",v:[0,-1,-1,0],t:"Knock Luma away, then punish Rosa.",r:"Luma interrupts Ryu's slower moves.",k:"Luma interrupts Ken's approach.",z:"Big punishes on Rosa, but Luma interrupts your startup."},
+{n:"Little Mac",v:[1,1,1,2],t:"Free edgeguards; auto-turn stops cross-ups.",r:"Free edgeguards.",k:"Free edgeguards.",z:"His recovery is awful and Kazuya edgeguards well."},
+{n:"Greninja",v:[0,0,0,-1],t:"Fast but light; punish whiffs.",r:"He's light; Shoryuken kills early.",k:"Ken's speed keeps up with him.",z:"His speed and shuriken work over your slow startup."},
+{n:"Palutena",v:[-1,-1,-1,-1],t:"Her range and speed beat your approach.",r:"Her range out-zones Hadoken.",k:"Her disjoint walls Ken's rushdown.",z:"Her air speed and range beat your slow startup."},
+{n:"Pac-Man",v:[-1,-1,-1,-1],t:"Hydrant and fruit wall you out.",r:"Hydrant and fruit out-zone Hadoken.",k:"Ken approaches into hydrant and fruit.",z:"Hydrant and fruit punish your slow movement."},
+{n:"Robin",v:[-1,0,-1,0],t:"Thunder and Arcfire wall you.",r:"Punish his slow tomes with Hadoken.",k:"Ken approaches into his tomes.",z:"Slow Robin is combo food once you get in."},
+{n:"Shulk",v:[-1,-1,-1,-1],t:"Outranged; punish laggy swings.",r:"His range beats yours.",k:"Disjoint and range beat Ken's approach.",z:"Range beats your short pokes."},
+{n:"Bowser Jr.",v:[0,0,0,0],t:"Punish laggy Clown Car moves; shield Mechakoopas.",r:"Punish laggy Clown Car moves.",k:"Punish laggy Clown Car moves.",z:"Clown Car is a big target for combos."},
+{n:"Duck Hunt",v:[-1,-1,-1,0],t:"Can and disc zoning wall you out.",r:"His zoning beats Hadoken.",k:"Ken approaches into can and disc.",z:"Crouch dash can duck the disc, and he's light."},
+{n:"Ryu",v:[0,0,0,1],d:"r",e:"z",t:"Out-weigh him; edgeguard his linear recovery.",r:"Ditto.",k:"Ken out-pressures Ryu up close.",z:"Crouch dash ducks Hadoken, and his recovery is linear."},
+{n:"Ken",v:[-1,0,0,1],d:"k",e:"z",t:"His rushdown out-pressures you.",r:"Hadoken slows his rushdown.",k:"Ditto.",z:"Crouch dash ducks Hadoken; he's combo food."},
+{n:"Cloud",v:[0,-1,-1,0],t:"Punish his landings; edgeguard when he has no Limit.",r:"Cross Slash beats Focus Attack, and his range beats yours.",k:"Cross Slash beats Focus Attack.",z:"Edgeguard him without Limit; respect his range."},
+{n:"Corrin",v:[0,0,0,0],t:"Punish laggy pin and smashes.",r:"Punish laggy pin and smashes.",k:"Punish laggy pin and smashes.",z:"Punish laggy pin and smashes."},
+{n:"Bayonetta",v:[1,0,0,-1],t:"Invincible Rising Tackle breaks her pressure.",r:"Shoryuken breaks her combos.",k:"Shoryuken breaks her combos.",z:"Her ladder combos eat your weak disadvantage."},
+{n:"Inkling",v:[-1,-1,-1,-1],t:"Punish her rolls out of shield.",r:"Ink and roller out-pace Ryu.",k:"Speed and ink beat Ken's approach.",z:"Fast cross-ups beat your inputs."},
+{n:"Ridley",v:[0,0,1,1],t:"Huge hurtbox; ledge-trap his recovery.",r:"Huge hurtbox; ledge-trap his recovery.",k:"Huge body for every string; edgeguard his recovery.",z:"Huge body and weak recovery: Gates of Hell territory."},
+{n:"Simon / Richter",v:[0,0,-1,0],t:"Get past axes and holy water; edgeguard his bad recovery.",r:"Hadoken contests his zoning; edgeguard his recovery.",k:"Ken approaches into axes and holy water.",z:"His recovery is poor; Devil Blaster and Gates of Hell punish it.",s:[{c:"z",i:"axes and holy water keep you out"}]},
+{n:"King K. Rool",v:[1,0,0,1],t:"Big target; ledge-trap his recovery.",r:"Big target, but belly armor beats some pokes.",k:"Big body for strings; respect belly armor.",z:"Big body for your combos."},
+{n:"Isabelle",v:[1,0,0,0],t:"She struggles to kill you.",r:"She struggles to kill you.",k:"She struggles to kill you.",z:"She struggles to kill heavy Kazuya."},
+{n:"Incineroar",v:[1,1,1,2],t:"Ledge-trap his bad recovery.",r:"Hadoken makes him approach; ledge-trap him.",k:"Combo food with a bad recovery.",z:"Slow, big, and a terrible recovery."},
+{n:"Piranha Plant",v:[0,0,0,0],t:"Shield Ptooie and punish.",r:"Punish Ptooie camping.",k:"Rush down past Ptooie.",z:"Big body for combos."},
+{n:"Joker",v:[-1,-1,-1,-1],t:"Kill before Arsene shows up.",r:"Speed and gun out-pace Ryu.",k:"Speed and gun out-pace Ken.",z:"Fast cross-ups and gun beat your slow startup."},
+{n:"Hero",v:[0,0,0,0],t:"Close in on spells; shield the sword.",r:"Punish slow menu casts.",k:"Rush him down during menus.",z:"Punish slow menu casts hard."},
+{n:"Banjo & Kazooie",v:[0,0,0,0],t:"Punish Wonderwing on shield; shield eggs.",r:"Punish Wonderwing on shield.",k:"Punish Wonderwing on shield.",z:"Crouch dash can duck eggs."},
+{n:"Terry",v:[0,0,1,0],d:"t",e:"z",t:"Ditto.",r:"Even per Game8's Ryu chart.",k:"Game8 rates Terry -1 against Ken, so Ken is the counter.",z:"Big body vs big body; skip the ditto."},
+{n:"Byleth",v:[0,0,0,0],t:"Get inside his lances; punish laggy moves.",r:"Get inside; he's weak up close.",k:"Ken's speed gets inside his range.",z:"Crouch dash past arrows; he's weak up close."},
+{n:"Min Min",v:[-1,-1,-1,0],t:"Arms wall you out.",r:"Arms out-range Hadoken.",k:"Ken approaches into arms.",z:"Armor and crouch dash help you get past the arms."},
+{n:"Steve",v:[0,0,0,-1],t:"Keep him from mining; blocks punish your slow air speed.",r:"Hadoken pressures him while he mines.",k:"Rush him before he mines.",z:"Blocks and minecart punish your poor air mobility."},
+{n:"Sephiroth",v:[0,0,-1,0],t:"Get inside his sword; punish laggy moves.",r:"Get inside his range; he's light.",k:"His disjoint walls Ken's approach.",z:"Light for his size; big punishes kill early."},
+{n:"Pyra / Mythra",v:[-1,-1,-1,-1],e:"trkz",t:"Not on Game8's chart. Punish Pyra's laggy swings out of shield; Mythra's speed is the problem.",r:"Pyra's range and Mythra's speed both trouble Ryu.",k:"Pyra's disjoint walls Ken; Mythra out-moves him.",z:"Mythra's speed beats your slow startup."},
+{n:"Kazuya",v:[0,-1,-1,0],d:"z",e:"trkz",t:"Not on Game8's chart. Out-move his slow jumpsquat.",r:"Crouch dash ducks your Hadoken.",k:"Crouch dash ducks your Hadoken.",z:"Ditto."},
+{n:"Sora",v:[0,0,0,0],e:"trkz",t:"Not on Game8's chart. He struggles to kill heavy Terry.",r:"He struggles to kill heavy Ryu.",k:"Light; Shoryuken confirms kill early.",z:"Light and floaty; big punishes kill early."},
+{n:"Mii Brawler",v:[0,1,1,1],t:"Edgeguard his recovery.",r:"Edgeguard his recovery.",k:"Out-pressure him; edgeguard his recovery.",z:"Combo food with an edgeguardable recovery."},
+{n:"Mii Swordfighter",v:[1,0,0,0],t:"Punish laggy sword swings.",r:"Punish laggy sword swings.",k:"Punish laggy sword swings.",z:"Punish laggy sword swings."},
+{n:"Mii Gunner",v:[0,-1,-1,0],t:"Shield through the zoning and push in.",r:"Out-zoned by his projectiles.",k:"Ken approaches into the zoning.",z:"Crouch dash can duck many of the shots.",s:[{c:"z",i:"the zoning keeps you out"}]}
+];
+X.sort((a,b)=>a.n.localeCompare(b.n));
+const NM={t:"Terry",z:"Kazuya",r:"Ryu",k:"Ken"};
+const ORDER=["t","z","r","k"]; // display order; only Terry gets tie priority
+const IDX={t:0,r:1,k:2,z:3};
+let sel=new Set(ORDER),f="all";
+try{const s=localStorage.getItem("pool4");if(s!==null)sel=new Set([...s].filter(c=>c in NM));}catch(e){}
+const q=document.getElementById("q"),list=document.getElementById("list"),chips=document.getElementById("chips"),modes=document.getElementById("modes");
+const norm=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+const val=(x,c)=>x.v[IDX[c]];
+function fmt(x,c){
+if(x.d===c)return "ditto";
+const n=val(x,c),s=n>0?"+"+n:n<0?String(n):"even";
+return ((x.e||"kz").includes(c)?"~":"")+s;
+}
+function pick(x){
+const pool=ORDER.filter(c=>sel.has(c));
+const best=Math.max(...pool.map(c=>val(x,c)));
+let top=pool.filter(c=>val(x,c)===best);
+if(top.length>1)top=top.filter(c=>c!==x.d); // skip the ditto if anything else ties
+if(top.includes("t"))top=["t"]; // Terry wins ties
+const sw=(x.s||[]).filter(s=>sel.has(s.c)&&!top.includes(s.c));
+return {cs:top,sw};
+}
+function buildModes(){
+modes.innerHTML="";
+ORDER.forEach(c=>{
+const b=document.createElement("button");
+b.className="mb "+c+(sel.has(c)?" on":"");
+b.textContent=NM[c];
+b.setAttribute("aria-pressed",sel.has(c));
+b.onclick=()=>{sel.has(c)?sel.delete(c):sel.add(c);
+try{localStorage.setItem("pool4",ORDER.filter(k=>sel.has(k)).join(""));}catch(e){}
+buildModes();buildChips();draw();};
+modes.appendChild(b);});
+}
+function buildChips(){
+chips.innerHTML="";
+if(!sel.size)return;
+const ks=ORDER.filter(c=>sel.has(c));
+const cnt={},picks=X.map(pick);
+picks.forEach(p=>{p.cs.forEach(c=>{cnt[c]=(cnt[c]||0)+1;});if(p.sw.length)cnt.sw=(cnt.sw||0)+1;});
+const opts=[["all","All "+X.length]].concat(ks.map(k=>[k,NM[k]+" "+(cnt[k]||0)]));
+if(cnt.sw)opts.push(["sw","Switch "+cnt.sw]);
+if(!opts.some(o=>o[0]===f))f="all";
+opts.forEach(([k,t])=>{
+const b=document.createElement("button");b.className="chip"+(k===f?" on":"");b.textContent=t;
+b.onclick=()=>{f=k;buildChips();draw();};chips.appendChild(b);});
+}
+function draw(){
+if(!sel.size){list.innerHTML='<p class="r">Turn on at least one character above.</p>';return;}
+const s=norm(q.value.trim());
+const rows=X.map(x=>[x,pick(x)]).filter(([x,p])=>(f==="all"||(f==="sw"?p.sw.length>0:p.cs.includes(f)))&&norm(x.n).includes(s));
+list.innerHTML=rows.length?rows.map(([x,p])=>{
+const one=p.cs.length===1;
+let h='<div class="row"><div class="top"><span class="n">'+x.n+'</span><span class="b b'+(one?p.cs[0]:'x')+'">'+p.cs.map(c=>NM[c]).join(' / ')+'</span></div>';
+h+=one?'<p class="r">'+x[p.cs[0]]+'</p>':p.cs.map(c=>'<p class="r"><span class="c'+c+'">'+NM[c]+':</span> '+x[c]+'</p>').join('');
+p.sw.forEach(w=>{h+='<p class="r">Switch to <span class="c'+w.c+'">'+NM[w.c]+'</span> if '+w.i+'.</p>';});
+if(sel.size>1)h+='<p class="rt">'+ORDER.filter(c=>sel.has(c)).map(c=>{const t=NM[c]+' '+fmt(x,c);return p.cs.includes(c)?'<b>'+t+'</b>':t;}).join(' · ')+'</p>';
+return h+'</div>';
+}).join(""):'<p class="r">No fighter matches that search.</p>';
+}
+q.oninput=draw;buildModes();buildChips();draw();
+</script>
+</body>
+</html>
